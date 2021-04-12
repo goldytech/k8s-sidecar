@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-sync
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: github-sync
+    spec:
+      containers:
+        - image: nginx
+          name: nginx-web
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m" 
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/
+              name: github-data
+        - image: k8s.gcr.io/git-sync:v3.1.5
+          name: git-sync
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m" 
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          volumeMounts:
+            - mountPath: /tmp/git
+              name: github-data
+          env:
+            - name: GIT_SYNC_REPO
+              value: https://github.com/goldytech/mtech-sidecar.git
+            - name: GIT_SYNC_BRANCH
+              value: main
+            - name: GIT_SYNC_DEPTH
+              value: "1"
+            - name: GIT_SYNC_DEST
+              value: "github-data"
+      volumes:
+        - name: github-data
+          persistentVolumeClaim:
+            claimName: github-pvc
+      
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sync-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+  selector:
+    app: github-sync
+  
+
