@@ -25,8 +25,8 @@ spec:
               memory: "256Mi"
               cpu: "500m"
           volumeMounts:
-            - mountPath: /usr/share/nginx/html/
-              name: github-data
+            - mountPath: /usr/share/nginx/
+              name: html
         - image: k8s.gcr.io/git-sync:v3.1.5
           name: git-sync
           resources:
@@ -38,7 +38,7 @@ spec:
               cpu: "500m"
           volumeMounts:
             - mountPath: /tmp/git
-              name: github-data
+              name: html
           env:
             - name: GIT_SYNC_REPO
               value: https://github.com/goldytech/mtech-sidecar.git
@@ -47,9 +47,9 @@ spec:
             - name: GIT_SYNC_DEPTH
               value: "1"
             - name: GIT_SYNC_DEST
-              value: "github-data"
+              value: "html"
       volumes:
-        - name: github-data
+        - name: html
           persistentVolumeClaim:
             claimName: github-pvc
       
